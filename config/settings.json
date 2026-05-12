@@ -2,5 +2,7 @@
     "blog_id": "334619364211713413",
     "default_author": "AI Coding Agent Army",
     "image_width": "100%",
-    "max_image_width": "800px"
+    "max_image_width": "800px",
+    "gemini_api_key": "YOUR_API_KEY_HERE",
+    "openai_api_key": "YOUR_OPENAI_API_KEY_HERE"
 }

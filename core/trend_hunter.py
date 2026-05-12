@@ -1,10 +1,10 @@
-import requests
-import json
 from datetime import datetime
+from core.ai_writer import AIWriter
 
 class TrendHunter:
     def __init__(self):
         self.research_logs = []
+        self.ai_writer = AIWriter()
         self.glossary_terms = {
             "Agentic Workflow": "단순한 명령 수행을 넘어, 목표 달성을 위해 스스로 계획하고 도구를 사용하는 자율적 작업 흐름",
             "Multi-Agent Orchestration": "여러 개의 전문화된 AI 에이전트가 협업하고 조율하며 복잡한 문제를 해결하는 시스템 아키텍처",
@@ -44,11 +44,24 @@ class TrendHunter:
             ]
         }
 
-    def create_masterpiece_post(self, category, topic_idx=0):
-        trends = self.get_trending_topics()
-        trend = trends[category][topic_idx]
-        topic = trend["topic"]
+    def create_masterpiece_post(self, category=None, topic_idx=0, custom_topic=None):
+        if custom_topic:
+            topic = custom_topic
+        else:
+            trends = self.get_trending_topics()
+            trend = trends[category][topic_idx]
+            topic = trend["topic"]
+            
+        # 1. 리서치 데이터 주입 (가장 중요한 변화)
+        research_data = "\n".join(self.research_logs) if self.research_logs else "최신 AI 기술 동향"
         
+        # LLM에게 리서치 데이터와 함께 글 작성을 요청
+        llm_content = self.ai_writer.write_masterpiece(topic, context=research_data)
+        
+        if llm_content:
+            return llm_content
+            
+        # LLM 실패 시 기존 템플릿 모드로 폴백
         content = f"""<div style="font-family: 'Inter', sans-serif; line-height: 1.8; color: #1e293b;">
 
 <h1 style="font-size: 3rem; color: #0f172a; line-height: 1.1; margin-bottom: 2rem; font-weight: 800; border-left: 10px solid #0ea5e9; padding-left: 1.5rem;">

@@ -45,8 +45,30 @@ class BloggerAPI:
     def get_base64_image(self, image_path):
         if not os.path.exists(image_path):
             return None
-        with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+            
+        try:
+            from PIL import Image
+            import io
+            
+            # 이미지 최적화 (압축 및 리사이징)
+            with Image.open(image_path) as img:
+                # 최대 너비를 1100px로 조정 (가독성 최적화)
+                if img.width > 1100:
+                    aspect_ratio = img.height / img.width
+                    new_height = int(1100 * aspect_ratio)
+                    img = img.resize((1100, new_height), Image.Resampling.LANCZOS)
+                
+                # 용량 압축을 위해 JPEG로 변환하여 메모리에 저장
+                buffer = io.BytesIO()
+                # 원본이 PNG여도 용량을 위해 JPEG로 변환 (투명도가 필요 없는 배경용)
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                img.save(buffer, format="JPEG", quality=85, optimize=True)
+                return base64.b64encode(buffer.getvalue()).decode('utf-8')
+        except Exception as e:
+            print(f"⚠️ 이미지 최적화 중 오류 발생 (원본 사용 시도): {e}")
+            with open(image_path, "rb") as image_file:
+                return base64.b64encode(image_file.read()).decode('utf-8')
 
     def convert_markdown_to_html(self, md_content, image_path=None):
         html_content = markdown.markdown(md_content)
@@ -54,14 +76,19 @@ class BloggerAPI:
         if image_path and os.path.exists(image_path):
             b64_data = self.get_base64_image(image_path)
             if b64_data:
-                style = f'width:{self.settings.get("image_width", "100%")}; max-width:{self.settings.get("max_image_width", "800px")}; display:block; margin:auto;'
-                # SEO: Add descriptive alt text
+                # 레이아웃 겹침 방지 및 완벽한 중앙 정렬 래퍼
+                style = f'width:100%; max-width:{self.settings.get("max_image_width", "1100px")}; display:block; margin: 0 auto; border-radius:15px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);'
                 alt_text = os.path.basename(image_path).replace(".png", "").replace("_", " ").title()
-                image_html = f'<br><img src="data:image/png;base64,{b64_data}" alt="{alt_text}" style="{style}"><br>'
+                image_html = f"""
+                <div style="margin: 4rem 0; text-align: center; clear: both; width: 100%;">
+                    <img src="data:image/png;base64,{b64_data}" alt="{alt_text}" style="{style}">
+                    <p style="color: #64748b; font-size: 0.85rem; margin-top: 1.5rem; font-style: italic; text-align: center;">▲ {alt_text}</p>
+                </div>
+                """
                 if "[IMAGE_PLACEHOLDER]" in html_content:
                     html_content = html_content.replace("[IMAGE_PLACEHOLDER]", image_html)
                 else:
-                    html_content += image_html
+                    html_content = image_html + html_content
                     
         # SEO: Add Call to Action
         html_content += '<hr><p><i>이 글이 도움이 되셨다면 <b>공감</b>과 <b>댓글</b> 부탁드립니다! 여러분의 에이전트 구축 경험도 공유해 주세요.</i></p>'
