@@ -18,6 +18,7 @@ function render() {
     
     renderActivities();
     renderPosts();
+    renderTrends();
 }
 
 function showTab(agent) {
@@ -74,6 +75,36 @@ function renderPosts() {
         `;
         list.appendChild(div);
     });
+}
+
+function renderTrends() {
+    const container = document.getElementById('trends-container');
+    container.innerHTML = '';
+    
+    const trends = dashboardData.trends || {};
+    
+    for (const [category, items] of Object.entries(trends)) {
+        const catDiv = document.createElement('div');
+        catDiv.className = 'trend-category';
+        
+        let itemsHtml = '';
+        items.forEach(item => {
+            itemsHtml += `
+                <div class="trend-list-item">
+                    <span class="trend-topic">${item.topic}</span>
+                    <span class="trend-detail">${item.detail || ''}</span>
+                </div>
+            `;
+        });
+        
+        catDiv.innerHTML = `
+            <h3>${category}</h3>
+            <div class="trend-list">
+                ${itemsHtml}
+            </div>
+        `;
+        container.appendChild(catDiv);
+    }
 }
 
 function refreshData() {

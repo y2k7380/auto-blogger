@@ -55,13 +55,38 @@ class BloggerAPI:
             b64_data = self.get_base64_image(image_path)
             if b64_data:
                 style = f'width:{self.settings.get("image_width", "100%")}; max-width:{self.settings.get("max_image_width", "800px")}; display:block; margin:auto;'
-                image_html = f'<br><img src="data:image/png;base64,{b64_data}" alt="Post Image" style="{style}"><br>'
+                # SEO: Add descriptive alt text
+                alt_text = os.path.basename(image_path).replace(".png", "").replace("_", " ").title()
+                image_html = f'<br><img src="data:image/png;base64,{b64_data}" alt="{alt_text}" style="{style}"><br>'
                 if "[IMAGE_PLACEHOLDER]" in html_content:
                     html_content = html_content.replace("[IMAGE_PLACEHOLDER]", image_html)
                 else:
                     html_content += image_html
                     
+        # SEO: Add Call to Action
+        html_content += '<hr><p><i>이 글이 도움이 되셨다면 <b>공감</b>과 <b>댓글</b> 부탁드립니다! 여러분의 에이전트 구축 경험도 공유해 주세요.</i></p>'
         return html_content
+
+    def get_related_posts_html(self):
+        token = self.get_access_token()
+        if not token: return ""
+        
+        try:
+            url = f"https://www.googleapis.com/blogger/v3/blogs/{self.blog_id}/posts?maxResults=3"
+            headers = {"Authorization": f"Bearer {token}"}
+            resp = requests.get(url, headers=headers)
+            if resp.status_code == 200:
+                posts = resp.json().get("items", [])
+                if not posts: return ""
+                html = '<div style="background:#f8fafc; padding:1rem; border-radius:10px; border:1px solid #e2e8f0; margin-top:2rem;">'
+                html += '<h3 style="margin-top:0;">📂 함께 읽으면 좋은 글</h3><ul>'
+                for p in posts:
+                    html += f'<li><a href="{p["url"]}">{p["title"]}</a></li>'
+                html += '</ul></div>'
+                return html
+        except:
+            return ""
+        return ""
 
     def publish_post(self, title, content, image_path=None, is_markdown=True, is_draft=False):
         token = self.get_access_token()
@@ -73,6 +98,10 @@ class BloggerAPI:
             final_content = self.convert_markdown_to_html(content, image_path)
         else:
             final_content = content
+
+        # SEO: Add Related Posts
+        related_html = self.get_related_posts_html()
+        final_content += related_html
 
         url = f"https://www.googleapis.com/blogger/v3/blogs/{self.blog_id}/posts"
         headers = {

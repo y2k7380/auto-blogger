@@ -1,5 +1,6 @@
 import os
 import json
+import subprocess
 from datetime import datetime, timedelta
 
 class AgentMonitor:
@@ -57,11 +58,30 @@ class AgentMonitor:
                     continue
         return activities
 
+    def get_git_activities(self, limit_hours=24):
+        activities = []
+        try:
+            # Get commits in the last N hours
+            cmd = ["git", "log", f"--since={limit_hours} hours ago", "--pretty=format:%h|%s|%at"]
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()
+            for line in output.split("\n"):
+                if not line: continue
+                hash, subject, ts = line.split("|")
+                activities.append({
+                    "agent": "Git",
+                    "action": f"Commit: {subject} ({hash})",
+                    "timestamp": int(ts) * 1000
+                })
+        except Exception as e:
+            print(f"Error getting git activities: {e}")
+        return activities
+
     def generate_daily_summary(self):
         claude = self.get_claude_activities()
         hermes = self.get_hermes_activities()
+        git = self.get_git_activities()
         
-        all_activities = claude + hermes
+        all_activities = claude + hermes + git
         all_activities.sort(key=lambda x: x["timestamp"], reverse=True)
         
         if not all_activities:

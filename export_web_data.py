@@ -7,6 +7,7 @@ def export_data():
     monitor = AgentMonitor()
     claude = monitor.get_claude_activities()
     hermes = monitor.get_hermes_activities()
+    git = monitor.get_git_activities()
     
     api = BloggerAPI()
     token = api.get_access_token()
@@ -19,12 +20,18 @@ def export_data():
         if resp.status_code == 200:
             recent_posts = resp.json().get("items", [])[:5]
 
+    from core.trend_hunter import TrendHunter
+    hunter = TrendHunter()
+    trends = hunter.get_trending_topics()
+
     data = {
         "activities": {
             "Claude": claude[:10],
-            "Hermes": hermes[:10]
+            "Hermes": hermes[:10],
+            "Git": git[:10]
         },
         "posts": recent_posts,
+        "trends": trends,
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     

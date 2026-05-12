@@ -21,8 +21,9 @@ def main():
     api.publish_post(
         title=title,
         content=summary,
+        image_path="./daily_summary.png",
         is_markdown=True,
-        is_draft=True  # Save as draft by default
+        is_draft=True
     )
 
 if __name__ == "__main__":

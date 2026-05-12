@@ -20,6 +20,7 @@
                 <div class="tabs">
                     <button class="tab-btn active" onclick="showTab('Claude')">Claude</button>
                     <button class="tab-btn" onclick="showTab('Hermes')">Hermes</button>
+                    <button class="tab-btn" onclick="showTab('Git')">Git</button>
                 </div>
                 <div id="activity-list" class="scroll-area">
                     <!-- Activities will be injected here -->
@@ -33,6 +34,13 @@
                 </div>
             </section>
         </main>
+
+        <section class="glass-card" id="trend-monitor" style="margin-top: 1.5rem;">
+            <h2><span class="icon">🔥</span> Real-time Trend Monitor</h2>
+            <div id="trends-container" class="trends-grid">
+                <!-- Trends will be injected here -->
+            </div>
+        </section>
 
         <footer>
             <button class="primary-btn" onclick="refreshData()">Update Command Center</button>
