@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Army Command Center</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Agent Army <span>Command Center</span></h1>
+            <p id="last-updated">Last Updated: --</p>
+        </header>
+
+        <main>
+            <section class="glass-card" id="agent-status">
+                <h2><span class="icon">🤖</span> Agent Activities</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="showTab('Claude')">Claude</button>
+                    <button class="tab-btn" onclick="showTab('Hermes')">Hermes</button>
+                </div>
+                <div id="activity-list" class="scroll-area">
+                    <!-- Activities will be injected here -->
+                </div>
+            </section>
+
+            <section class="glass-card" id="recent-posts">
+                <h2><span class="icon">📝</span> Recent Blog Posts</h2>
+                <div id="posts-list" class="scroll-area">
+                    <!-- Posts will be injected here -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <button class="primary-btn" onclick="refreshData()">Update Command Center</button>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
