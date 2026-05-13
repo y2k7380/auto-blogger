@@ -3,11 +3,30 @@ from core.blogger_api import BloggerAPI
 from core.image_generator import ImageGenerator
 import os
 import sys
+import datetime
+import re
+import uuid
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(line_buffering=True)
+
+def safe_slug(value, max_length=80):
+    slug = re.sub(r'[^0-9A-Za-z가-힣_-]+', '_', value.strip())
+    slug = re.sub(r'_+', '_', slug).strip('_').lower()
+    return (slug or "post")[:max_length]
+
+def unique_post_paths(topic):
+    os.makedirs("posts", exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    nonce = str(uuid.uuid4())[:6]
+    slug = safe_slug(topic)
+    base = f"{slug}_{stamp}_{nonce}"
+    return {
+        "content": os.path.join("posts", f"trend_post_{base}.md"),
+        "image": os.path.abspath(os.path.join("posts", f"image_{base}.png")),
+    }
 
 def main():
     hunter = TrendHunter()
@@ -29,18 +48,16 @@ def main():
     print(f"🌟 '{top_trend['topic']}'에 대한 자율 마스터피스 발행 프로세스를 시작합니다...")
     content = hunter.create_masterpiece_post(category, 0)
     
-    filename = f"posts/trend_post_{top_trend['topic'].replace(' ', '_').lower()}.md"
-    with open(filename, "w") as f:
+    paths = unique_post_paths(top_trend['topic'])
+    filename = paths["content"]
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(content)
     
     print(f"Trend post generated: {filename}")
     
     # 2. 이미지 자율 생성 단계 추가 (Codex 사용)
     img_gen = ImageGenerator()
-    # 절대 경로를 사용하여 깨짐 방지
-    abs_post_dir = os.path.abspath("./posts")
-    fresh_image_name = f"image_{top_trend['topic'].replace(' ', '_').lower()}.png"
-    fresh_image_path = os.path.join(abs_post_dir, fresh_image_name)
+    fresh_image_path = paths["image"]
     
     img_success = img_gen.generate_image(top_trend['topic'], fresh_image_path)
     
@@ -61,13 +78,10 @@ def main():
     else:
         title = f"[AI 인사이트] {top_trend['topic']}"
     
-    # 매번 새로운 이미지 경로 지정
-    fresh_image = f"./posts/image_{top_trend['topic'].replace(' ', '_').lower()}.png"
-    
     api.publish_post(
         title=title,
         content=content,
-        image_path=fresh_image, 
+        image_path=final_image, 
         is_markdown=True,
         is_draft=True
     )

@@ -1,5 +1,9 @@
 import argparse
 import sys
+import datetime
+import os
+import re
+import uuid
 from core.trend_hunter import TrendHunter
 from core.blogger_api import BloggerAPI
 import subprocess
@@ -8,6 +12,17 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(line_buffering=True)
+
+def safe_slug(value, max_length=80):
+    slug = re.sub(r'[^0-9A-Za-z가-힣_-]+', '_', value.strip())
+    slug = re.sub(r'_+', '_', slug).strip('_')
+    return (slug or "research")[:max_length]
+
+def unique_research_path(topic):
+    os.makedirs("posts", exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    nonce = str(uuid.uuid4())[:6]
+    return os.path.join("posts", f"research_{safe_slug(topic)}_{stamp}_{nonce}.md")
 
 def main():
     parser = argparse.ArgumentParser(description="AI Agent Army Blogger CLI")
@@ -40,8 +55,8 @@ def main():
         hunter = TrendHunter()
         hunter.perform_realtime_research([args.topic])
         content = hunter.create_masterpiece_post(custom_topic=args.topic) 
-        filename = f"posts/research_{args.topic.replace(' ', '_')}.md"
-        with open(filename, "w") as f:
+        filename = unique_research_path(args.topic)
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(content)
         print(f"📝 마스터피스 집필 완료: {filename}")
 

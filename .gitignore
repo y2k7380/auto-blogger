@@ -26,5 +26,8 @@ temp_prompt.txt
 # Generated pipeline/one-off artifacts
 posts/pipe_*.png
 posts/pipeline_*.md
+posts/trend_post_*.md
+posts/research_*.md
+posts/image_*.png
 posts/oneoff_*.md
 posts/oneoff_*.png
