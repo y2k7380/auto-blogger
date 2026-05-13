@@ -2,6 +2,12 @@ from core.trend_hunter import TrendHunter
 from core.blogger_api import BloggerAPI
 from core.image_generator import ImageGenerator
 import os
+import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(line_buffering=True)
 
 def main():
     hunter = TrendHunter()
@@ -44,10 +50,16 @@ def main():
     # 3. 블로그 발행 (제목을 LLM이 만든 내용에서 추출하거나 동적으로 생성)
     api = BloggerAPI()
     
-    # 텍스트 내에서 첫 번째 <h1> 태그를 찾아 제목으로 사용 (트렌디한 제목 반영)
+    # 텍스트 내에서 첫 번째 H1을 찾아 제목으로 사용 (트렌디한 제목 반영)
     import re
-    title_match = re.search(r'<h1[^>]*>(.*?)</h1>', content)
-    title = title_match.group(1).strip() if title_match else f"[AI 인사이트] {top_trend['topic']}"
+    html_title_match = re.search(r'<h1[^>]*>(.*?)</h1>', content, re.IGNORECASE | re.DOTALL)
+    markdown_title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+    if html_title_match:
+        title = re.sub(r'<[^>]+>', '', html_title_match.group(1)).strip()
+    elif markdown_title_match:
+        title = markdown_title_match.group(1).strip()
+    else:
+        title = f"[AI 인사이트] {top_trend['topic']}"
     
     # 매번 새로운 이미지 경로 지정
     fresh_image = f"./posts/image_{top_trend['topic'].replace(' ', '_').lower()}.png"

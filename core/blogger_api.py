@@ -4,6 +4,7 @@ import subprocess
 import requests
 import base64
 import markdown
+import re
 
 class BloggerAPI:
     def __init__(self, settings_path="config/settings.json"):
@@ -70,7 +71,14 @@ class BloggerAPI:
             with open(image_path, "rb") as image_file:
                 return base64.b64encode(image_file.read()).decode('utf-8')
 
+    def normalize_related_posts_marker(self, md_content):
+        pattern = r'\n+###\s*함께 읽으면 좋은 글\s*\n+(?:\s*[-*]\s+.*\n*){0,8}'
+        md_content = re.sub(pattern, "\n\n[RELATED_POSTS]\n", md_content, flags=re.MULTILINE)
+        return md_content
+
     def convert_markdown_to_html(self, md_content, image_path=None):
+        md_content = self.normalize_related_posts_marker(md_content)
+        # 마크다운 렌더링 (HTML 태그 허용)
         html_content = markdown.markdown(md_content)
         
         if image_path and os.path.exists(image_path):
@@ -90,8 +98,25 @@ class BloggerAPI:
                 else:
                     html_content = image_html + html_content
                     
-        # SEO: Add Call to Action
-        html_content += '<hr><p><i>이 글이 도움이 되셨다면 <b>공감</b>과 <b>댓글</b> 부탁드립니다! 여러분의 에이전트 구축 경험도 공유해 주세요.</i></p>'
+        # 프리미엄 마스터피스 CSS 강제 주입
+        masterpiece_css = """
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700;900&display=swap');
+          .masterpiece-container { font-family: 'Pretendard', sans-serif; line-height: 1.9; color: #1e293b; max-width: 900px; margin: 0 auto; padding: 0 20px; word-break: keep-all; }
+          .masterpiece-container h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 2rem; color: #0f172a; line-height: 1.2; letter-spacing: -1px; border-left: 8px solid #2563eb; padding-left: 20px; }
+          .masterpiece-container h2 { font-size: 2.2rem; font-weight: 800; margin-top: 80px; border-bottom: 4px solid #2563eb; display: inline-block; padding-bottom: 5px; color: #0f172a; }
+          .masterpiece-container h3 { font-size: 1.5rem; color: #334155; margin-top: 40px; font-weight: 700; }
+          .masterpiece-container p { font-size: 1.15rem; margin-bottom: 25px; color: #334155; }
+          .masterpiece-container blockquote { border-left: 5px solid #2563eb; padding: 20px 30px; margin: 40px 0; background: #f0f9ff; font-style: italic; font-size: 1.25rem; font-weight: 500; color: #1e3a8a; border-radius: 0 10px 10px 0; }
+          .masterpiece-container strong { color: #1e40af; font-weight: 700; background: rgba(37,99,235,0.05); padding: 2px 5px; border-radius: 4px; }
+          .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 35px; margin: 50px 0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+          .summary-box strong { background: none; color: #0f172a; font-size: 1.3rem; }
+        </style>
+        """
+        
+        # 전체 래퍼 씌우기
+        html_content = f"{masterpiece_css}\n<div class='masterpiece-container'>\n{html_content}\n</div>"
+        
         return html_content
 
     def get_related_posts_html(self):
@@ -106,7 +131,7 @@ class BloggerAPI:
                 posts = resp.json().get("items", [])
                 if not posts: return ""
                 html = '<div style="background:#f8fafc; padding:1rem; border-radius:10px; border:1px solid #e2e8f0; margin-top:2rem;">'
-                html += '<h3 style="margin-top:0;">📂 함께 읽으면 좋은 글</h3><ul>'
+                html += '<h3 style="margin-top:0;">함께 읽으면 좋은 글</h3><ul>'
                 for p in posts:
                     html += f'<li><a href="{p["url"]}">{p["title"]}</a></li>'
                 html += '</ul></div>'
@@ -128,7 +153,11 @@ class BloggerAPI:
 
         # SEO: Add Related Posts
         related_html = self.get_related_posts_html()
-        final_content += related_html
+        if "[RELATED_POSTS]" in final_content:
+            final_content = final_content.replace("<p>[RELATED_POSTS]</p>", related_html)
+            final_content = final_content.replace("[RELATED_POSTS]", related_html)
+        else:
+            final_content += related_html
 
         url = f"https://www.googleapis.com/blogger/v3/blogs/{self.blog_id}/posts"
         headers = {
@@ -146,7 +175,7 @@ class BloggerAPI:
             result = response.json()
             print(f"Success! Post {'drafted' if is_draft else 'published'}.")
             print(f"URL: {result.get('url')}")
-            return True
+            return result.get("url") or True
         else:
             print(f"Failed to publish: {response.status_code}")
             print(response.text)

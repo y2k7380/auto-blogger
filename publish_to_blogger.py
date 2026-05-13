@@ -45,15 +45,17 @@ def get_base64_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def publish_post(blog_id, title, content, image_path):
+def publish_post(blog_id, title, content, image_path=None):
     token = get_access_token()
     if not token:
         return
     
-    # Get base64 string of the image
-    b64_data = get_base64_image(image_path)
-    image_html = f'<br><img src="data:image/png;base64,{b64_data}" alt="AI Coding Agent Army" style="width:100%; max-width:800px; display:block; margin:auto;"><br>'
-    content = content.replace("[IMAGE_PLACEHOLDER]", image_html)
+    if image_path and os.path.exists(image_path):
+        b64_data = get_base64_image(image_path)
+        image_html = f'<br><img src="data:image/png;base64,{b64_data}" alt="AI Coding Agent Army" style="width:100%; max-width:800px; display:block; margin:auto;"><br>'
+        content = content.replace("[IMAGE_PLACEHOLDER]", image_html)
+    elif "[IMAGE_PLACEHOLDER]" in content:
+        content = content.replace("[IMAGE_PLACEHOLDER]", "")
     
     url = f"https://www.googleapis.com/blogger/v3/blogs/{blog_id}/posts"
     headers = {

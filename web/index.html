@@ -3,50 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Agent Army Command Center</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Auto-Blogger Pro | Monetization Hub</title>
+    <link rel="stylesheet" href="style.css?v=20260513-oneoff">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="script.js?v=20260513-oneoff" defer></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>AI Agent Army <span>Command Center</span></h1>
-            <p id="last-updated">Last Updated: --</p>
-        </header>
-
-        <main>
-            <section class="glass-card" id="agent-status">
-                <h2><span class="icon">🤖</span> Agent Activities</h2>
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="showTab('Claude')">Claude</button>
-                    <button class="tab-btn" onclick="showTab('Hermes')">Hermes</button>
-                    <button class="tab-btn" onclick="showTab('Git')">Git</button>
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Auto-Blogger <span style="font-weight: 300; color: var(--accent);">Pro</span></h2>
+                <div class="status-indicator">
+                    <div class="pulse-dot"></div>
+                    <span id="current-time">00:00:00 KST</span>
                 </div>
-                <div id="activity-list" class="scroll-area">
-                    <!-- Activities will be injected here -->
-                </div>
-            </section>
-
-            <section class="glass-card" id="recent-posts">
-                <h2><span class="icon">📝</span> Recent Blog Posts</h2>
-                <div id="posts-list" class="scroll-area">
-                    <!-- Posts will be injected here -->
-                </div>
-            </section>
-        </main>
-
-        <section class="glass-card" id="trend-monitor" style="margin-top: 1.5rem;">
-            <h2><span class="icon">🔥</span> Real-time Trend Monitor</h2>
-            <div id="trends-container" class="trends-grid">
-                <!-- Trends will be injected here -->
             </div>
-        </section>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-target="dashboard">
+                    <span class="icon">💎</span> Monetization Hub
+                </button>
+                <button class="nav-item" data-target="oneoff">
+                    <span class="icon">✍️</span> 단발성 발행
+                </button>
+                <button class="nav-item" data-target="logs">
+                    <span class="icon">📜</span> Live Logs
+                </button>
+                <a href="https://krsuncom.blogspot.com/" target="_blank" class="nav-item" style="text-decoration: none;">
+                    <span class="icon">🔗</span> 내 블로그 보기
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 1rem;">
+                    "수익화의 본질은 압도적인 퀄리티와 일관성입니다."
+                </p>
+            </div>
+        </aside>
 
-        <footer>
-            <button class="primary-btn" onclick="refreshData()">Update Command Center</button>
-        </footer>
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            
+            <!-- VIEW: DASHBOARD -->
+            <section id="dashboard" class="view-section active">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+                    <div>
+                        <h1 class="view-title" style="margin-bottom: 0.5rem;">마스터피스 자동화 파이프라인</h1>
+                        <p style="color: var(--text-muted);">주제별 지시어를 설정하고 크론에 등록하여 무인 수익화 블로그를 운영하세요.</p>
+                    </div>
+                    <button id="open-pipeline-modal" class="btn-primary" style="padding: 0.8rem 1.5rem; width: auto;">+ 새 파이프라인 생성</button>
+                </div>
+
+                <div id="pipeline-list" class="pipeline-grid">
+                    <!-- Pipelines injected via JS -->
+                </div>
+            </section>
+
+            <!-- VIEW: ONE-OFF PUBLISH -->
+            <section id="oneoff" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+                    <div>
+                        <h1 class="view-title" style="margin-bottom: 0.5rem;">단발성 마스터피스 발행</h1>
+                        <p style="color: var(--text-muted);">주제, 링크, 외부 조사 자료, 긴 메모를 입력하면 한 번만 마스터피스 글로 작성해 발행합니다.</p>
+                    </div>
+                </div>
+
+                <div class="oneoff-layout">
+                    <div class="oneoff-form glass-card">
+                        <div class="form-group">
+                            <label>글 주제 / 제목 방향</label>
+                            <input type="text" id="oneoff-topic" placeholder="비워두면 프롬프트를 바탕으로 제목을 자동 생성합니다">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label>페르소나</label>
+                                <select id="oneoff-persona">
+                                    <option value="Masterpiece">수석 아키텍트 (깊은 기술 통찰)</option>
+                                    <option value="Reviewer">테크 리뷰어 (장단점 비교/구매 유도)</option>
+                                    <option value="Marketer">SEO 마케터 (검색 노출 최적화)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>발행 방식</label>
+                                <select id="oneoff-publish-mode">
+                                    <option value="live">즉시 발행</option>
+                                    <option value="draft">초안으로 저장</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>프롬프트 / 자료 / 링크 / 조사 내용</label>
+                            <textarea id="oneoff-prompt" class="oneoff-textarea" placeholder="여기에 작성하고 싶은 주제, 링크 목록, 외부에서 조사한 내용, 기사 요약, 관점 지시를 모두 붙여넣으세요."></textarea>
+                        </div>
+                        <button id="run-oneoff" class="btn-primary">마스터피스 단발 발행</button>
+                    </div>
+
+                    <div class="oneoff-history glass-card">
+                        <div class="history-header">
+                            <h2>단발 발행 이력</h2>
+                            <button id="refresh-oneoff-history" class="btn-secondary">새로고침</button>
+                        </div>
+                        <div id="oneoff-history-list" class="history-list">
+                            <div class="history-empty">이력을 불러오는 중...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: LOGS -->
+            <section id="logs" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h1 class="view-title" style="margin-bottom: 0;">시스템 실시간 로그</h1>
+                    <button id="clear-logs" class="btn-secondary" style="padding: 0.5rem 1rem;">로그 지우기</button>
+                </div>
+                <div id="queue-status" class="queue-status">
+                    <div class="queue-muted">큐 상태를 불러오는 중...</div>
+                </div>
+                <div id="log-viewer" class="log-container">
+                    <div class="log-entry">로딩 중...</div>
+                </div>
+            </section>
+            
+        </main>
     </div>
 
-    <script src="script.js"></script>
+    <!-- PIPELINE MODAL -->
+    <div id="pipeline-modal" class="modal-overlay">
+        <div class="modal-content glass-card" style="max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 id="modal-title">새로운 마스터피스 파이프라인</h2>
+                <button id="close-modal" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            
+            <input type="hidden" id="pipe-id" value="">
+
+            <!-- TOPIC -->
+            <div class="form-group">
+                <label>수익화 타겟 주제 / 키워드</label>
+                <input type="text" id="pipe-topic" placeholder="예: 2026년 AI 트렌드와 클라우드 주식 전망">
+                <div class="suggestions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <span class="pill topic-pill">💡 오늘의 최신 AI 뉴스 리서치 및 분석</span>
+                    <span class="pill topic-pill">💡 깃허브 실시간 오픈소스 트렌딩 리포트</span>
+                    <span class="pill topic-pill">💡 해외 IT/테크 주요 기사 딥다이브</span>
+                </div>
+            </div>
+            
+            <!-- SCHEDULE & PERSONA -->
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>매일 발행 시간 설정 (KST)</label>
+                    <input type="time" id="pipe-time" value="09:00">
+                    <input type="hidden" id="pipe-cron" value="">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>전문가 페르소나</label>
+                    <select id="pipe-persona">
+                        <option value="Masterpiece">수석 아키텍트 (깊은 기술 통찰)</option>
+                        <option value="Reviewer">테크 리뷰어 (장단점 비교/구매 유도)</option>
+                        <option value="Marketer">SEO 마케터 (검색 노출 최적화)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- RULES / PROMPT TEMPLATE -->
+            <div class="form-group">
+                <label>세부 지시어 및 템플릿 (Rules)</label>
+                <select id="rule-template" style="margin-bottom: 0.5rem;">
+                    <option value="">-- 최적의 템플릿 선택 --</option>
+                    <option value="masterpiece_default">[기본] 독자 몰입형 마스터피스</option>
+                    <option value="breaking_trend">[트렌드] 지금 읽어야 하는 긴급 분석</option>
+                    <option value="contrarian">[역발상] 모두가 놓친 불편한 진실</option>
+                    <option value="developer_deepdive">[개발자] 실무자용 기술 딥다이브</option>
+                    <option value="executive_brief">[임원/리더] 의사결정자 전략 보고서</option>
+                    <option value="beginner_bridge">[입문자] 쉽게 읽히는 고급 해설</option>
+                    <option value="future_scenario">[전망] 6개월/18개월/3년 시나리오</option>
+                    <option value="case_study">[사례] 실제 적용과 실패 원인 분석</option>
+                    <option value="comparison">[비교] 선택 기준을 세워주는 분석</option>
+                    <option value="monetization">[수익화] 구매/도입 판단을 돕는 글</option>
+                </select>
+                <textarea id="pipe-rules" placeholder="지시어를 직접 작성하거나 위 템플릿을 선택하세요."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button id="save-pipeline" class="btn-primary" style="flex: 1;">설정 저장</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

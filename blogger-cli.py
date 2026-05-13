@@ -4,6 +4,11 @@ from core.trend_hunter import TrendHunter
 from core.blogger_api import BloggerAPI
 import subprocess
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(line_buffering=True)
+
 def main():
     parser = argparse.ArgumentParser(description="AI Agent Army Blogger CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -25,7 +30,7 @@ def main():
 
     if args.command == "auto":
         print("🚀 트렌드 분석 및 자동 포스팅을 시작합니다...")
-        subprocess.run(["python3", "trend_post_generator.py"])
+        subprocess.run([sys.executable, "-u", "trend_post_generator.py"])
         print("✅ 자동 포스팅이 완료되었습니다.")
 
     elif args.command == "research":
