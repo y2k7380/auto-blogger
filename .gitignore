@@ -1,0 +1,30 @@
+# Python/runtime caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs and local server output
+*.log
+*.log.*.bak
+web/server.log
+
+# Local secrets and machine-specific settings
+.env
+.env.*
+!.env.example
+
+# Auto-blogger runtime state
+config/pipelines.json
+config/run_history.json
+config/oneoff_history.json
+config/*.lock
+config/oneoff_requests/
+
+# Temporary prompts and local scratch files
+temp_prompt.txt
+
+# Generated pipeline/one-off artifacts
+posts/pipe_*.png
+posts/pipeline_*.md
+posts/oneoff_*.md
+posts/oneoff_*.png
