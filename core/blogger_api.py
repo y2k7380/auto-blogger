@@ -5,6 +5,9 @@ import requests
 import base64
 import markdown
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 class BloggerAPI:
     def __init__(self, settings_path="config/settings.json"):
@@ -24,7 +27,7 @@ class BloggerAPI:
             client_secret = creds.get("client_secret")
             
             if not refresh_token:
-                print("Error: No refresh token found.")
+                logger.error("Error: No refresh token found in gws output.")
                 return None
                 
             response = requests.post("https://oauth2.googleapis.com/token", data={
@@ -37,10 +40,16 @@ class BloggerAPI:
             if response.status_code == 200:
                 return response.json().get("access_token")
             else:
-                print(f"Error refreshing token: {response.status_code}")
+                logger.error(f"Error refreshing token: {response.status_code} - {response.text}")
                 return None
+        except FileNotFoundError:
+            logger.error("Error: 'gws' CLI not found. Please install or ensure it is in PATH.")
+            return None
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Error executing gws: {e.output.decode() if e.output else str(e)}")
+            return None
         except Exception as e:
-            print(f"Error getting token: {e}")
+            logger.error(f"Unexpected error getting token: {e}")
             return None
 
     def get_base64_image(self, image_path):
@@ -67,7 +76,7 @@ class BloggerAPI:
                 img.save(buffer, format="JPEG", quality=85, optimize=True)
                 return base64.b64encode(buffer.getvalue()).decode('utf-8')
         except Exception as e:
-            print(f"⚠️ 이미지 최적화 중 오류 발생 (원본 사용 시도): {e}")
+            logger.warning(f"⚠️ 이미지 최적화 중 오류 발생 (원본 사용 시도): {e}")
             with open(image_path, "rb") as image_file:
                 return base64.b64encode(image_file.read()).decode('utf-8')
 
@@ -101,16 +110,20 @@ class BloggerAPI:
         # 프리미엄 마스터피스 CSS 강제 주입
         masterpiece_css = """
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700;900&display=swap');
-          .masterpiece-container { font-family: 'Pretendard', sans-serif; line-height: 1.9; color: #1e293b; max-width: 900px; margin: 0 auto; padding: 0 20px; word-break: keep-all; }
-          .masterpiece-container h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 2rem; color: #0f172a; line-height: 1.2; letter-spacing: -1px; border-left: 8px solid #2563eb; padding-left: 20px; }
-          .masterpiece-container h2 { font-size: 2.2rem; font-weight: 800; margin-top: 80px; border-bottom: 4px solid #2563eb; display: inline-block; padding-bottom: 5px; color: #0f172a; }
-          .masterpiece-container h3 { font-size: 1.5rem; color: #334155; margin-top: 40px; font-weight: 700; }
-          .masterpiece-container p { font-size: 1.15rem; margin-bottom: 25px; color: #334155; }
-          .masterpiece-container blockquote { border-left: 5px solid #2563eb; padding: 20px 30px; margin: 40px 0; background: #f0f9ff; font-style: italic; font-size: 1.25rem; font-weight: 500; color: #1e3a8a; border-radius: 0 10px 10px 0; }
-          .masterpiece-container strong { color: #1e40af; font-weight: 700; background: rgba(37,99,235,0.05); padding: 2px 5px; border-radius: 4px; }
-          .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 35px; margin: 50px 0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-          .summary-box strong { background: none; color: #0f172a; font-size: 1.3rem; }
+          @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;700;900&display=swap');
+          .masterpiece-container { font-family: 'Pretendard', -apple-system, sans-serif; line-height: 2.05; color: #334155; max-width: 780px; margin: 0 auto; padding: 0 24px; word-break: keep-all; }
+          .masterpiece-container h1 { font-size: 2.4rem; font-weight: 900; margin-bottom: 1rem; color: #0f172a; line-height: 1.35; letter-spacing: -0.5px; }
+          .masterpiece-container h2 { font-size: 1.6rem; font-weight: 800; margin-top: 56px; margin-bottom: 20px; color: #0f172a; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; display: block; }
+          .masterpiece-container h3 { font-size: 1.25rem; color: #475569; margin-top: 32px; font-weight: 700; }
+          .masterpiece-container p { font-size: 1.08rem; margin-bottom: 22px; color: #475569; letter-spacing: -0.01em; }
+          .masterpiece-container ul, .masterpiece-container ol { margin: 16px 0 24px 20px; color: #475569; font-size: 1.05rem; }
+          .masterpiece-container li { margin-bottom: 8px; line-height: 1.85; }
+          .masterpiece-container blockquote { border-left: 4px solid #6366f1; padding: 18px 24px; margin: 32px 0; background: #f8fafc; font-size: 1.12rem; font-weight: 500; color: #334155; border-radius: 0 8px 8px 0; font-style: normal; }
+          .masterpiece-container strong { color: #1e293b; font-weight: 700; }
+          .masterpiece-container code { background: #f1f5f9; padding: 2px 7px; border-radius: 4px; font-size: 0.92em; color: #6366f1; font-family: 'JetBrains Mono', monospace; }
+          .masterpiece-container pre { background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 24px 0; font-size: 0.9rem; line-height: 1.7; }
+          .masterpiece-container hr { border: none; border-top: 1px solid #e2e8f0; margin: 48px 0; }
+          .masterpiece-container a { color: #6366f1; text-decoration: underline; text-underline-offset: 3px; }
         </style>
         """
         
@@ -143,7 +156,7 @@ class BloggerAPI:
     def publish_post(self, title, content, image_path=None, is_markdown=True, is_draft=False):
         token = self.get_access_token()
         if not token:
-            print("Failed to obtain access token.")
+            logger.error("Failed to obtain access token.")
             return False
         
         if is_markdown:
@@ -173,10 +186,10 @@ class BloggerAPI:
         response = requests.post(url, headers=headers, json=data)
         if response.status_code == 200:
             result = response.json()
-            print(f"Success! Post {'drafted' if is_draft else 'published'}.")
-            print(f"URL: {result.get('url')}")
+            logger.info(f"Success! Post {'drafted' if is_draft else 'published'}.")
+            logger.info(f"URL: {result.get('url')}")
             return result.get("url") or True
         else:
-            print(f"Failed to publish: {response.status_code}")
-            print(response.text)
+            logger.error(f"Failed to publish: {response.status_code}")
+            logger.error(response.text)
             return False

@@ -50,7 +50,8 @@ def append_history(item, status, message=None):
     RUN_STATUS["history"] = RUN_STATUS["history"][:20]
 
 def pipeline_exists(pid):
-    pipelines = load_json_file(PIPELINES_FILE, [])
+    with file_lock(PIPELINES_FILE + ".lock"):
+        pipelines = load_json_file(PIPELINES_FILE, [])
     return next((p for p in pipelines if p.get('id') == pid), None)
 
 def load_json_file(path, default):
@@ -185,7 +186,8 @@ class AutoBloggerHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(read_log_tail(LOG_FILE).encode())
         elif self.path == '/api/pipelines':
-            pipelines = load_json_file(PIPELINES_FILE, [])
+            with file_lock(PIPELINES_FILE + ".lock"):
+                pipelines = load_json_file(PIPELINES_FILE, [])
             self.send_json({"pipelines": pipelines})
         elif self.path == '/api/queue':
             with QUEUE_LOCK:
@@ -303,24 +305,25 @@ class AutoBloggerHandler(http.server.SimpleHTTPRequestHandler):
                 return
             pid = data.get('id')
             
-            pipelines = load_json_file(PIPELINES_FILE, [])
-                
-            if pid:
-                # Update
-                found = False
-                for i, p in enumerate(pipelines):
-                    if p.get('id') == pid:
-                        pipelines[i] = data
-                        found = True
-                        break
-                if not found:
+            with file_lock(PIPELINES_FILE + ".lock"):
+                pipelines = load_json_file(PIPELINES_FILE, [])
+                    
+                if pid:
+                    # Update
+                    found = False
+                    for i, p in enumerate(pipelines):
+                        if p.get('id') == pid:
+                            pipelines[i] = data
+                            found = True
+                            break
+                    if not found:
+                        pipelines.append(data)
+                else:
+                    # Add
+                    data['id'] = str(uuid.uuid4())[:8]
                     pipelines.append(data)
-            else:
-                # Add
-                data['id'] = str(uuid.uuid4())[:8]
-                pipelines.append(data)
-                
-            save_json_file(PIPELINES_FILE, pipelines)
+                    
+                save_json_file(PIPELINES_FILE, pipelines)
                 
             sync_cron(pipelines)
             self.send_json({"status": "success", "pipeline": data})
@@ -331,9 +334,10 @@ class AutoBloggerHandler(http.server.SimpleHTTPRequestHandler):
                 return
             pid = data.get('id')
             
-            pipelines = load_json_file(PIPELINES_FILE, [])
-            pipelines = [p for p in pipelines if p.get('id') != pid]
-            save_json_file(PIPELINES_FILE, pipelines)
+            with file_lock(PIPELINES_FILE + ".lock"):
+                pipelines = load_json_file(PIPELINES_FILE, [])
+                pipelines = [p for p in pipelines if p.get('id') != pid]
+                save_json_file(PIPELINES_FILE, pipelines)
                 
             sync_cron(pipelines)
             self.send_json({"status": "success"})

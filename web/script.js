@@ -271,7 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.status === 'queued') {
                 button.textContent = '큐 등록됨';
             }
-            activateSection('logs');
             fetchLogs();
             fetchQueueStatus();
         } catch(e) {
@@ -375,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             runOneoffButton.textContent = '큐 등록됨';
             await loadOneoffHistory();
-            activateSection('logs');
             fetchLogs();
             fetchQueueStatus();
         } catch (e) {

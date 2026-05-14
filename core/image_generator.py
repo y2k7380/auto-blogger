@@ -4,6 +4,9 @@ from google import genai
 from google.genai import types
 from PIL import Image
 import io
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ImageGenerator:
     def __init__(self, settings_path="config/settings.json"):
@@ -31,7 +34,7 @@ class ImageGenerator:
 
     def generate_image(self, prompt_subject, output_path):
         if not self.client:
-            print("⚠️ Google AI API 키가 설정되지 않아 이미지 생성을 건너뜁니다.", flush=True)
+            logger.warning("⚠️ Google AI API 키가 설정되지 않아 이미지 생성을 건너뜁니다.")
             return False
 
         prompt = (
@@ -39,12 +42,12 @@ class ImageGenerator:
             "premium digital art style, subtle cyberpunk lighting, no text, no logo. "
             f"Topic: {prompt_subject}"
         )
-        print(f"🎨 Google AI 이미지 생성을 시작합니다: {prompt_subject}", flush=True)
+        logger.info(f"🎨 Google AI 이미지 생성을 시작합니다: {prompt_subject}")
         
         last_error = None
         for model in self.image_models:
             try:
-                print(f"  - 이미지 모델 시도: {model}", flush=True)
+                logger.info(f"  - 이미지 모델 시도: {model}")
                 response = self.client.models.generate_images(
                     model=model,
                     prompt=prompt,
@@ -59,21 +62,21 @@ class ImageGenerator:
                     image = Image.open(io.BytesIO(generated_image.image.image_bytes))
                     # jpeg으로 저장되지만 사용자 경로의 확장자를 유지
                     image.save(output_path)
-                    print(f"✅ Google 이미지 생성 및 저장 완료: {output_path}", flush=True)
+                    logger.info(f"✅ Google 이미지 생성 및 저장 완료: {output_path}")
                     return True
 
-                print(f"⚠️ 이미지가 응답에 포함되지 않았습니다: {model}", flush=True)
+                logger.warning(f"⚠️ 이미지가 응답에 포함되지 않았습니다: {model}")
             except Exception as e:
                 last_error = e
                 message = str(e)
                 if "paid plans" in message or "billing" in message.lower():
-                    print(f"⚠️ 이미지 모델 사용 불가: {model} - Google AI Studio 결제/유료 플랜이 필요합니다.", flush=True)
+                    logger.warning(f"⚠️ 이미지 모델 사용 불가: {model} - Google AI Studio 결제/유료 플랜이 필요합니다.")
                 else:
-                    print(f"⚠️ 이미지 모델 실패: {model} - {e}", flush=True)
+                    logger.error(f"⚠️ 이미지 모델 실패: {model} - {e}")
 
         for model in self.gemini_image_models:
             try:
-                print(f"  - Gemini 이미지 모델 시도: {model}", flush=True)
+                logger.info(f"  - Gemini 이미지 모델 시도: {model}")
                 response = self.client.models.generate_content(
                     model=model,
                     contents=[prompt],
@@ -85,15 +88,15 @@ class ImageGenerator:
                         else:
                             image = Image.open(io.BytesIO(part.inline_data.data))
                         image.save(output_path)
-                        print(f"✅ Gemini 이미지 생성 및 저장 완료: {output_path}", flush=True)
+                        logger.info(f"✅ Gemini 이미지 생성 및 저장 완료: {output_path}")
                         return True
             except Exception as e:
                 last_error = e
                 message = str(e)
                 if "RESOURCE_EXHAUSTED" in message or "quota" in message.lower():
-                    print(f"⚠️ Gemini 이미지 모델 쿼터 초과: {model} - Google AI Studio 사용량/결제 한도를 확인해야 합니다.", flush=True)
+                    logger.warning(f"⚠️ Gemini 이미지 모델 쿼터 초과: {model} - Google AI Studio 사용량/결제 한도를 확인해야 합니다.")
                 else:
-                    print(f"⚠️ Gemini 이미지 모델 실패: {model} - {e}", flush=True)
+                    logger.error(f"⚠️ Gemini 이미지 모델 실패: {model} - {e}")
 
-        print(f"❌ Google 이미지 생성 오류: 사용 가능한 이미지 모델을 찾지 못했습니다. 마지막 오류: {last_error}", flush=True)
+        logger.error(f"❌ Google 이미지 생성 오류: 사용 가능한 이미지 모델을 찾지 못했습니다. 마지막 오류: {last_error}")
         return False
