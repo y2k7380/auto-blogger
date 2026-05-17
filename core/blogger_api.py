@@ -17,7 +17,9 @@ class BloggerAPI:
 
     def get_access_token(self):
         try:
-            output = subprocess.check_output(["gws", "auth", "export", "--unmasked"], stderr=subprocess.STDOUT).decode()
+            env = os.environ.copy()
+            env["PATH"] = f"/home/ubuntu/.local/share/fnm/node-versions/v20.20.2/installation/bin:{env.get('PATH', '')}"
+            output = subprocess.check_output(["gws", "auth", "export", "--unmasked"], stderr=subprocess.STDOUT, env=env).decode()
             start = output.find('{')
             end = output.rfind('}') + 1
             creds = json.loads(output[start:end])

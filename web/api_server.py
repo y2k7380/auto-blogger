@@ -152,7 +152,7 @@ def sync_cron(pipelines):
     for p in pipelines:
         schedule = p.get('schedule', '0 9 * * *')
         pid = p.get('id')
-        job = f"{schedule} cd {BASE_DIR} && PYTHONUNBUFFERED=1 {PYTHON_BIN} -u run_pipeline.py {pid} >> {LOG_FILE} 2>&1"
+        job = f"{schedule} /bin/bash -l -c 'cd {BASE_DIR} && PYTHONUNBUFFERED=1 {PYTHON_BIN} -u run_pipeline.py {pid} >> {LOG_FILE} 2>&1'"
         lines.append(job)
         
     new_cron = '\n'.join(lines) + '\n'
